@@ -2,8 +2,10 @@ package com.avenueinfotech.yourlocationaddress;
 
 
 import android.app.Dialog;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -12,6 +14,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,6 +41,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     GoogleApiClient mGoogleApiClient;
     private TextView textView;
     ConnectionDetector cd;
+    WifiManager wifiManager;
+    Switch wifiSwitch;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +57,28 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         } else {
             Toast.makeText(this, "Enable GPS", Toast.LENGTH_LONG).show();
         }
+
+        wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        wifiSwitch = (Switch)findViewById(R.id.wifiswitch);
+
+        if (wifiManager.isWifiEnabled()){
+            wifiSwitch.setChecked(true);
+        } else {
+            wifiSwitch.setChecked(false);
+        }
+
+        wifiSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked){
+                    wifiManager.setWifiEnabled(true);
+                    Toast.makeText(MainActivity.this, "Wifi may take a moment to turn ON", Toast.LENGTH_LONG).show();
+                }else {
+                    wifiManager.setWifiEnabled(false);
+                    Toast.makeText(MainActivity.this, "Wifi is switched OFF", Toast.LENGTH_LONG).show();
+                }
+            }
+        });
 
 //        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment);
 //        mapFragment.getMapAsync(this);
@@ -250,7 +278,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             LatLng ll = new LatLng(location.getLatitude(), location.getLongitude());
             CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 19);
             mGoogleMap.animateCamera(update);
-            textView.setText("Long: " + location.getLongitude() + " Lat: " + location.getLatitude() + " Accurcy:" + location.getAccuracy() +"mts" + " Altitude: " + location.getAltitude() );
+            textView.setText("Long: " + location.getLongitude() + " Lat: " + location.getLatitude() +  " Altitude: " + location.getAltitude() );
 
         }
 
@@ -262,6 +290,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //                "Provider: "+location.getProvider()+"<br />"+
 //                "Accurucy: "+location.getAccuracy()+"<br />"+
 //                "Speed: "+ DateFormat.getTimeFormat(this).format(new Date())+"<br +>"
+//        " Accurcy:" + location.getAccuracy() +"mts" +
 //        ));
     }
 }
