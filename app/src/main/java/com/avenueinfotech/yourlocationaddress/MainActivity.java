@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private TextView textView;
     ConnectionDetector cd;
     WifiManager wifiManager;
+    TextView wifiStatus;
     Switch wifiSwitch;
     private ProgressDialog dialog;
     private static GPSTracker gps;
@@ -102,11 +103,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
         wifiSwitch = (Switch)findViewById(R.id.wifiswitch);
+        wifiStatus = (TextView)findViewById(R.id.wifistatus);
 
         if (wifiManager.isWifiEnabled()){
             wifiSwitch.setChecked(true);
+            wifiStatus.setText("Wifi ON");
         } else {
             wifiSwitch.setChecked(false);
+            wifiStatus.setText("Wifi OFF");
         }
 
         wifiSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -114,9 +118,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked){
                     wifiManager.setWifiEnabled(true);
+                    wifiStatus.setText("Wifi On");
                     Toast.makeText(MainActivity.this, "Wifi may take a moment to turn ON", Toast.LENGTH_LONG).show();
                 }else {
                     wifiManager.setWifiEnabled(false);
+                    wifiStatus.setText("Wifi Off");
                     Toast.makeText(MainActivity.this, "Wifi is switched OFF", Toast.LENGTH_LONG).show();
                 }
             }
@@ -326,7 +332,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onConnected(@Nullable Bundle bundle) {
         mLocationRequest = LocationRequest.create();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setInterval(30000);
+        mLocationRequest.setInterval(36000);
 
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
@@ -382,7 +388,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             LatLng ll = new LatLng(location.getLatitude(), location.getLongitude());
             CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 19);
             mGoogleMap.animateCamera(update);
-            textView.setText("Long: " + location.getLongitude() + " Lat: " + location.getLatitude() +  " Altitude: " + location.getAltitude() );
+            textView.setText("Long: " + location.getLongitude() + " Lat: " + location.getLatitude() +  " Alt:" + location.getAltitude() +  " Acc:" + location.getAccuracy()+  "m" );
 
 
 

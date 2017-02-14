@@ -3,4 +3,5 @@
     <color name="colorPrimary">#8D6E90</color>
     <color name="colorPrimaryDark">#E0E9E9</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="colorwifi">#212121</color>
 </resources>
