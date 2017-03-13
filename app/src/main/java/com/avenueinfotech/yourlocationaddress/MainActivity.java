@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -43,15 +44,17 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
-        LocationListener {
+        LocationListener, GoogleMap.OnMyLocationButtonClickListener {
 
-    GoogleMap mGoogleMap;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+
+    private GoogleMap mMap;
     private GoogleApiClient mApiClient;
     private TextView textView;
     ConnectionDetector cd;
@@ -230,37 +233,41 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     private void initMap() {
-        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment);
+//        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment);
+//        mapFragment.getMapAsync(this);
+        SupportMapFragment mapFragment =
+                (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
     }
 
 
     @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mGoogleMap = googleMap;
+    public void onMapReady(GoogleMap map) {
+        mMap = map;
 //        LatLng sydney = new LatLng(-33.867, 151.206);
 
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
             return;
+
+
         }
-        mGoogleMap.setMyLocationEnabled(true);
-//        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney, 13));
-//
-//        mGoogleMap.addMarker(new MarkerOptions()
-//                .title("Sydney")
-//                .snippet("The most populous city in Australia.")
-//                .position(sydney));
-//        mGoogleApiClient = new GoogleApiClient.Builder(this)
-//                .addApi(LocationServices.API)
-//                .addConnectionCallbacks(this)
-//                .addOnConnectionFailedListener(this)
-//                .build();
-//
-//        mGoogleApiClient.connect();
+        mMap.setOnMyLocationButtonClickListener(this);
+        enableMyLocation();
 
 
+    }
 
+    private void enableMyLocation() {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission to access the location is missing.
+            PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION, true);
+        } else if (mMap != null) {
+            // Access to the location has been granted to the app.
+            mMap.setMyLocationEnabled(true);
+        }
     }
 
 
@@ -307,19 +314,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.mapTypeNone:
-                mGoogleMap.setMapType(GoogleMap.MAP_TYPE_NONE);
+                mMap.setMapType(GoogleMap.MAP_TYPE_NONE);
                 break;
             case R.id.mapTypeNormal:
-                mGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
                 break;
             case R.id.mapTypeSatellite:
-                mGoogleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+                mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
                 break;
             case R.id.mapTypeTerrain:
-                mGoogleMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
+                mMap.setMapType(GoogleMap.MAP_TYPE_TERRAIN);
                 break;
             case R.id.mapTypeHybrid:
-                mGoogleMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+                mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
                 break;
 
             default:
@@ -389,7 +396,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         } else {
             LatLng ll = new LatLng(location.getLatitude(), location.getLongitude());
             CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 19);
-            mGoogleMap.animateCamera(update);
+            mMap.animateCamera(update);
             textView.setText("Long: " + location.getLongitude() + " Lat: " + location.getLatitude() +  " Alt:" + location.getAltitude() +  " Acc:" + location.getAccuracy()+  "m" );
 
 
@@ -408,4 +415,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //        ));
     }
 
+    @Override
+    public boolean onMyLocationButtonClick() {
+        return false;
+    }
 }

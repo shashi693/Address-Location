@@ -77,13 +77,21 @@
         android:layout_height="2dp"
         android:background="#E8EAF6"/>
 
-
     <fragment
+        android:id="@+id/map"
+        class="com.google.android.gms.maps.SupportMapFragment"
+        xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:name="com.google.android.gms.maps.MapFragment"
-        android:id="@+id/mapFragment"
-        android:layout_weight="0.95" />
+        android:layout_weight="0.95"/>
+
+
+    <!--<fragment-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:name="com.google.android.gms.maps.MapFragment"-->
+        <!--android:id="@+id/mapFragment"-->
+        <!--android:layout_weight="0.95" />-->
 
 
     <!-- view for AdMob Banner Ad -->
