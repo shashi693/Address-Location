@@ -6,6 +6,8 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -15,11 +17,11 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.CompoundButton;
-import android.widget.Switch;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -46,7 +48,14 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
@@ -54,13 +63,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 
+    double latitude=0, longitude=0;
+
+    Button satbutton;
+    Button norbutton;
     private GoogleMap mMap;
     private GoogleApiClient mApiClient;
     private TextView textView;
     ConnectionDetector cd;
     WifiManager wifiManager;
     TextView wifiStatus;
-    Switch wifiSwitch;
+
+//    Switch wifiSwitch;
     private ProgressDialog dialog;
     private static GPSTracker gps;
     final int REQUEST_LOCATION = 199;
@@ -107,31 +121,31 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         dialog.setCancelable(false);
 
         wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-        wifiSwitch = (Switch)findViewById(R.id.wifiswitch);
+//        wifiSwitch = (Switch)findViewById(R.id.wifiswitch);
         wifiStatus = (TextView)findViewById(R.id.wifistatus);
 
         if (wifiManager.isWifiEnabled()){
-            wifiSwitch.setChecked(true);
+//            wifiSwitch.setChecked(true);
             wifiStatus.setText("Wifi ON");
         } else {
-            wifiSwitch.setChecked(false);
+//            wifiSwitch.setChecked(false);
             wifiStatus.setText("Wifi OFF");
         }
 
-        wifiSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked){
-                    wifiManager.setWifiEnabled(true);
-                    wifiStatus.setText("Wifi On");
-                    Toast.makeText(MainActivity.this, "Wifi may take a moment to turn ON", Toast.LENGTH_LONG).show();
-                }else {
-                    wifiManager.setWifiEnabled(false);
-                    wifiStatus.setText("Wifi Off");
-                    Toast.makeText(MainActivity.this, "Wifi is switched OFF", Toast.LENGTH_LONG).show();
-                }
-            }
-        });
+//        wifiSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//                if (isChecked){
+//                    wifiManager.setWifiEnabled(true);
+//                    wifiStatus.setText("Wifi On");
+//                    Toast.makeText(MainActivity.this, "Wifi may take a moment to turn ON", Toast.LENGTH_LONG).show();
+//                }else {
+//                    wifiManager.setWifiEnabled(false);
+//                    wifiStatus.setText("Wifi Off");
+//                    Toast.makeText(MainActivity.this, "Wifi is switched OFF", Toast.LENGTH_LONG).show();
+//                }
+//            }
+//        });
 
 //        MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment);
 //        mapFragment.getMapAsync(this);
@@ -152,7 +166,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .setRequestAgent("android_studio:ad_template").build();
         adView.loadAd(adRequest);
 
-        textView = (TextView) findViewById(R.id.textView);
+//        textView = (TextView) findViewById(R.id.textView);
+        satellite();
+        normal();
+
 //
     }
 
@@ -171,8 +188,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         {
             LocationRequest locationRequest = LocationRequest.create();
             locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-            locationRequest.setInterval(1000);
-            locationRequest.setFastestInterval(5 * 1000);
+            locationRequest.setInterval(100000);
+            locationRequest.setFastestInterval(20 * 1000);
             LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
                     .addLocationRequest(locationRequest);
 
@@ -253,6 +270,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         }
         mMap.setOnMyLocationButtonClickListener(this);
+        mMap.getUiSettings().setZoomControlsEnabled(true);
         enableMyLocation();
 
 
@@ -304,6 +322,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //        mGoogleMap = googleMap;
 //    }
 
+    private void goToLocationZoom(double lat, double lng, float zoom) {
+        LatLng ll = new LatLng(lat, lng);
+        CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 18);
+        mMap.moveCamera(update);
+    }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -335,19 +360,39 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return super.onOptionsItemSelected(item);
     }
 
+    private void satellite() {
+        satbutton = (Button)findViewById(R.id.satellite);
+        satbutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+            }
+        });
+    }
+
+    private void normal() {
+        norbutton = (Button)findViewById(R.id.normal);
+        norbutton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+            }
+        });
+    }
+
     LocationRequest mLocationRequest;
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         mLocationRequest = LocationRequest.create();
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setInterval(36000);
+        mLocationRequest.setInterval(360000);
 
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
         LocationServices.FusedLocationApi.requestLocationUpdates(mApiClient, mLocationRequest, this);
-        Log.i("LOG", "onConnection(" + bundle + ")");
+//        Log.i("LOG", "onConnection(" + bundle + ")");
 
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
@@ -395,10 +440,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             Toast.makeText(this, "Cant get current location", Toast.LENGTH_LONG).show();
         } else {
             LatLng ll = new LatLng(location.getLatitude(), location.getLongitude());
-            CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 19);
+            CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 18);
             mMap.animateCamera(update);
-            textView.setText("Long: " + location.getLongitude() + " Lat: " + location.getLatitude() +  " Alt:" + location.getAltitude() +  " Acc:" + location.getAccuracy()+  "m" );
-
+//            textView.setText("Long: " + location.getLongitude() + " Lat: " + location.getLatitude() +  " Alt:" + location.getAltitude() +  " Acc:" + location.getAccuracy()+  "m" );
+            latitude = location.getLatitude();
+            longitude = location.getLongitude();
 
 
         }
@@ -415,8 +461,72 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //        ));
     }
 
+    Marker marker;
+
+    public void geoLocate(View view) throws IOException {
+
+        EditText et = (EditText) findViewById(R.id.editText);
+        String location = et.getText().toString();
+
+        Geocoder gc = new Geocoder(this);
+        List<Address> list = gc.getFromLocationName(location, 1);
+        Address address = list.get(0);
+        String locality = address.getLocality();
+//        String area = address.getLocality();
+
+
+        Toast.makeText(this, locality, Toast.LENGTH_LONG).show();
+
+
+        double lat = address.getLatitude();
+        double lng = address.getLongitude();
+        goToLocationZoom(lat, lng, 11);
+
+        setMarker(locality, lat, lng);
+
+    }
+
+    private void setMarker(String locality, double lat, double lng) {
+        if (marker != null) {
+            marker.remove();
+        }
+
+        MarkerOptions options = new MarkerOptions()
+                .title(locality)
+                .draggable(true)
+                .icon( BitmapDescriptorFactory.fromResource(R.drawable.iconw))
+                .position(new LatLng(lat, lng));
+//                .snippet("I am here");
+
+        marker = mMap.addMarker(options);
+    }
+
+
     @Override
     public boolean onMyLocationButtonClick() {
         return false;
+    }
+
+
+
+    public String addressLocation(double lat, double lon){
+        String curAddress = "";
+
+        Geocoder geocoder = new Geocoder(MainActivity.this, Locale.getDefault());
+        List<Address> addressList;
+        try{
+            addressList = geocoder.getFromLocation(lat, lon, 3);
+            if(addressList.size() > 0){
+                curAddress = addressList.get(0).getAddressLine(1);
+            }
+
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return curAddress;
+
+
+
+
     }
 }

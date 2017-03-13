@@ -12,5 +12,8 @@
     <string name="map_type_satellite">Satellite</string>
     <string name="map_type_hybrid">Hybrid</string>
 
+    <string name="satellite">Satellite</string>
+    <string name="normal">Normal</string>
+
     <string name="banner_ad_unit_id">ca-app-pub-1183672799205641/3149390613</string>
 </resources>
