@@ -7,8 +7,8 @@ android {
         applicationId "com.avenueinfotech.yourlocationaddress"
         minSdkVersion 15
         targetSdkVersion 25
-        versionCode 11
-        versionName "2.0"
+        versionCode 13
+        versionName "2.2"
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }

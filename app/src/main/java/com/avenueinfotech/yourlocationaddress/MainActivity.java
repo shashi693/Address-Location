@@ -1,15 +1,19 @@
 package com.avenueinfotech.yourlocationaddress;
 
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.location.Address;
+import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationManager;
 import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -17,6 +21,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -53,6 +58,10 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
@@ -63,7 +72,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
 
-    double latitude=0, longitude=0;
+    Button btnShow;
+    TextView addressView;
+
+    LocationManager locationManager;
+    String provider;
+    double lat, log;
 
     Button satbutton;
     Button norbutton;
@@ -81,6 +95,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public final int REQUEST_ID_MULTIPLE_PERMISSIONS = 1;
     String[] PERMISSIONS = {android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION, android.Manifest.permission.WRITE_EXTERNAL_STORAGE, android.Manifest.permission.READ_EXTERNAL_STORAGE};
 
+    @SuppressLint("WifiManagerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -95,6 +110,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             Toast.makeText(this, "Google services Absent", Toast.LENGTH_LONG).show();
         }
 
+        btnShow = (Button) findViewById(R.id.address);
+        addressView = (TextView) findViewById(R.id.addresstxt);
+
         mApiClient = new GoogleApiClient.Builder(this)
                 .addApi(ActivityRecognition.API)
                 .addApi(LocationServices.API)
@@ -103,6 +121,30 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .build();
 
         mApiClient.connect();
+
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION
+            }, LOCATION_PERMISSION_REQUEST_CODE);
+
+        } else {
+            getLocation();
+        }
+
+        btnShow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (ActivityCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(MainActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    return;
+                }
+                Location myLocation = locationManager.getLastKnownLocation(provider);
+                lat = myLocation.getLatitude();
+                log = myLocation.getLongitude();
+
+                new GetAddress().execute(String.format("%.4f,%.4f",lat,log));
+            }
+        });
 
         gps = new GPSTracker(this);
 
@@ -235,6 +277,63 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    private void getLocation() {
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        provider = locationManager.getBestProvider(new Criteria(), false);
+
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        final Location location = locationManager.getLastKnownLocation(provider);
+        if (location == null)
+            Log.e("ERROR", "Location is null");
+
+    }
+
+    private class GetAddress extends AsyncTask<String, Void, String> {
+        ProgressDialog dialog = new ProgressDialog(MainActivity.this);
+
+        @Override
+        protected String doInBackground(String... strings) {
+            try {
+                double lat = Double.parseDouble(strings[0].split(",")[0]);
+                double log = Double.parseDouble(strings[0].split(",")[1]);
+                String response;
+                HttpDataHandler http = new HttpDataHandler();
+                String url = String.format("https://maps.googleapis.com/maps/api/geocode/json?latlng=%.4f,%.4f&sensor=false", lat, log);
+                response = http.GetHTTPData(url);
+                return response;
+            } catch (Exception ex) {
+
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+//            dialog.setMessage("Please wait...");
+//            dialog.setCanceledOnTouchOutside(true);
+//            dialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            try {
+                JSONObject jsonObject = new JSONObject(s);
+                String address = ((JSONArray) jsonObject.get("results")).getJSONObject(0).get("formatted_address").toString();
+                addressView.setText(address);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            if (dialog.isShowing())
+                dialog.dismiss();
+        }
+
+    }
+
+
     public boolean googleServicesAvailable() {
         GoogleApiAvailability api = GoogleApiAvailability.getInstance();
         int isAvailable = api.isGooglePlayServicesAvailable(this);
@@ -289,38 +388,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
-//        if(googleSevicesAvailable()){
-//            Toast.makeText(this, "play services exits", Toast.LENGTH_SHORT).show();
-//            setContentView(R.layout.activity_main);
-//            initMap();
-//        } else {
-//
-//        }
-//    }
-//
-//    private void initMap() {
-//        SupportMapFragment mapFragment = (SupportMapFragment)getSupportFragmentManager().findFragmentById(R.id.mapFragment);
-//        mapFragment.getMapAsync(this);
-//    }
-//
-//    public boolean googleSevicesAvailable(){
-//        GoogleApiAvailability api = GoogleApiAvailability.getInstance();
-//        int isAvailable = api.isGooglePlayServicesAvailable(this);
-//        if(isAvailable == ConnectionResult.SUCCESS){
-//            return true;
-//        } else  if (api.isUserResolvableError(isAvailable)){
-//            Dialog dialog = api.getErrorDialog(this, isAvailable, 0);
-//            dialog.show();
-//        } else {
-//            Toast.makeText(this, "canot concet to play sevrvices", Toast.LENGTH_SHORT).show();
-//        }
-//        return false;
-//    }
-//
-//    @Override
-//    public void onMapReady(GoogleMap googleMap) {
-//        mGoogleMap = googleMap;
-//    }
 
     private void goToLocationZoom(double lat, double lng, float zoom) {
         LatLng ll = new LatLng(lat, lng);
@@ -443,8 +510,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll, 18);
             mMap.animateCamera(update);
 //            textView.setText("Long: " + location.getLongitude() + " Lat: " + location.getLatitude() +  " Alt:" + location.getAltitude() +  " Acc:" + location.getAccuracy()+  "m" );
-            latitude = location.getLatitude();
-            longitude = location.getLongitude();
+//            latitude = location.getLatitude();
+//            longitude = location.getLongitude();
 
 
         }
@@ -472,7 +539,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         List<Address> list = gc.getFromLocationName(location, 1);
         Address address = list.get(0);
         String locality = address.getLocality();
-//        String area = address.getLocality();
+        String area = address.getLocality();
 
 
         Toast.makeText(this, locality, Toast.LENGTH_LONG).show();

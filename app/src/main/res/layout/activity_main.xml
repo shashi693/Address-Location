@@ -11,24 +11,41 @@
     android:orientation="vertical"
     tools:context="com.avenueinfotech.yourlocationaddress.MainActivity">
 
-    <!--<TextView-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:text="Hello World!"-->
-        <!--android:id="@+id/textView" />-->
-    <!-- view for AdMob Banner Ad -->
-    <!--<TextView-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:id="@+id/textView"-->
-        <!--/>-->
+
+
+
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="39dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:text="Address"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/address"
+            android:onClick="lables"
+            android:layout_weight=".6"
+            />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:id="@+id/addresstxt"
+            android:layout_weight="19.4"
+            android:background="@color/colorText"
+            android:hint="Click to get your current Address"
+            android:textStyle="bold|italic"
+            />
+
+    </LinearLayout>
 
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-
-
+        android:layout_height="39dp"
         >
 
         <LinearLayout
@@ -37,12 +54,12 @@
             android:orientation="vertical"
             android:layout_gravity="center"
             android:layout_marginLeft="1dp"
-            android:layout_marginTop="5dp"
+            android:layout_marginTop="2dp"
             android:id="@+id/wifitext"
             >
 
             <ImageView
-                android:layout_marginTop="3dp"
+                android:layout_marginTop="0dp"
                 app:srcCompat="@drawable/wifi27"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
@@ -77,27 +94,27 @@
         <EditText
             android:scrollbars="vertical"
             android:textSize="16dp"
-            android:layout_width="210dp"
+            android:layout_width="293dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:id="@+id/editText"
             android:text="Ko Pha Ngan, Thailand"
-
             android:layout_alignBottom="@+id/wifitext"
-            android:layout_toRightOf="@+id/button"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"/>
+
+            android:layout_toLeftOf="@+id/button"
+            android:layout_toRightOf="@+id/wifitext"
+            android:layout_toEndOf="@+id/wifitext"/>
 
         <Button
             android:text="Go"
-            android:layout_width="50dp"
+            android:layout_width="60dp"
             android:layout_height="wrap_content"
             android:id="@+id/button"
             android:onClick="geoLocate"
 
-            android:layout_alignBottom="@+id/wifitext"
-            android:layout_toRightOf="@+id/wifitext"
-            android:layout_toEndOf="@+id/wifitext"/>
+            android:layout_alignTop="@+id/wifitext"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"/>
 
 
 
@@ -125,7 +142,6 @@
         <!--android:id="@+id/mapFragment"-->
         <!--android:layout_weight="0.95" />-->
 
-
     <!-- view for AdMob Banner Ad -->
     <com.google.android.gms.ads.AdView
         android:id="@+id/adView"
@@ -136,6 +152,7 @@
         android:layout_gravity="center"
         ads:adSize="BANNER"
         ads:adUnitId="@string/banner_ad_unit_id" />
+
 
     <LinearLayout
         android:layout_width="match_parent"
