@@ -547,7 +547,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         double lat = address.getLatitude();
         double lng = address.getLongitude();
-        goToLocationZoom(lat, lng, 11);
+        goToLocationZoom(lat, lng, 9);
 
         setMarker(locality, lat, lng);
 
