@@ -95,6 +95,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public final int REQUEST_ID_MULTIPLE_PERMISSIONS = 1;
     String[] PERMISSIONS = {android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION, android.Manifest.permission.WRITE_EXTERNAL_STORAGE, android.Manifest.permission.READ_EXTERNAL_STORAGE};
 
+//    ImageView iv_arrow;
+//    TextView tv_degrees;
+//
+//    private static SensorManager sensorService;
+//    private Sensor sensor;
+//
+//    private float currentDegree = 0f;
+
     @SuppressLint("WifiManagerLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,6 +120,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         btnShow = (Button) findViewById(R.id.address);
         addressView = (TextView) findViewById(R.id.addresstxt);
+
+//        iv_arrow = (ImageView)findViewById(R.id.iv_arrow);
+//        tv_degrees = (TextView)findViewById(R.id.tv_degrees);
+//
+//        sensorService = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+//        sensor = sensorService.getDefaultSensor(Sensor.TYPE_ORIENTATION);
 
         mApiClient = new GoogleApiClient.Builder(this)
                 .addApi(ActivityRecognition.API)
@@ -596,4 +610,50 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (mApiClient != null)
+            mApiClient.connect();
+    }
+
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        if(sensor != null){
+//            sensorService.registerListener(this, sensor, SensorManager.SENSOR_DELAY_FASTEST);
+//
+//        }else {
+//            Toast.makeText(MainActivity.this, "Not supported", Toast.LENGTH_LONG).show();
+//        }
+//    }
+//
+//    @Override
+//    protected void onPause() {
+//        super.onPause();
+//        sensorService.unregisterListener(this);
+//    }
+//
+//    @Override
+//    public void onSensorChanged(SensorEvent sensorEvent) {
+//        int degree = Math.round(sensorEvent.values[0]);
+//
+//        tv_degrees.setText(Integer.toString(degree) + (char) 0x00B0);
+//
+//        RotateAnimation rs = new RotateAnimation(currentDegree, -degree,
+//                Animation.RELATIVE_TO_SELF, 0.5f,Animation.RELATIVE_TO_SELF, 0.5f);
+//
+//        rs.setDuration(1000);
+//        rs.setFillAfter(true);
+//
+//        iv_arrow.startAnimation(rs);
+//        currentDegree = -degree;
+//
+//    }
+//
+//    @Override
+//    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+//
+//    }
 }
